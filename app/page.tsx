@@ -1,18 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { ImageUploader } from './components/upload/ImageUploader'
 import { StylistSuggestion } from './components/stylist/StylistSuggestion'
+import { FIXED_USER_ID } from '@/lib/utils/user'
 
 export default async function HomePage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div>
@@ -25,15 +15,16 @@ export default async function HomePage() {
       <div className="grid gap-8 md:grid-cols-2">
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold">Upload Clothing</h2>
-          <ImageUploader userId={user.id} />
+          <ImageUploader userId={FIXED_USER_ID} />
         </div>
 
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold">AI Stylist</h2>
-          <StylistSuggestion userId={user.id} />
+          <StylistSuggestion userId={FIXED_USER_ID} />
         </div>
       </div>
     </div>
   )
 }
+
 

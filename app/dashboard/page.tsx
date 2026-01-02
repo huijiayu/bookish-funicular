@@ -1,19 +1,9 @@
 import { getWardrobeStats } from '@/app/actions/stats'
 import { StatsCard } from '@/app/components/dashboard/StatsCard'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { FIXED_USER_ID } from '@/lib/utils/user'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const stats = await getWardrobeStats(user.id)
+  const stats = await getWardrobeStats(FIXED_USER_ID)
 
   // Calculate average cost per wear
   const avgCostPerWear =
