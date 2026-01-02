@@ -25,6 +25,13 @@ describe('getCostPerWear', () => {
       select: vi.fn(function(this: any) { return this; }),
       eq: vi.fn(function(this: any) { return this; }),
       gte: vi.fn(function(this: any) { return this; }),
+      then: vi.fn(function(this: any, onResolve: any) {
+        return Promise.resolve(this._mockResult || { data: null, error: null }).then(onResolve)
+      }),
+      catch: vi.fn(function(this: any, onReject: any) {
+        return Promise.resolve(this._mockResult || { data: null, error: null }).catch(onReject)
+      }),
+      _mockResult: { data: null, error: null },
     }
 
     mockSupabase = {
@@ -50,10 +57,10 @@ describe('getCostPerWear', () => {
     ]
 
     mockSupabase.rpc.mockResolvedValue({ data: null, error: { message: 'Function not found' } })
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: mockItems,
       error: null,
-    })
+    }
 
     const result = await getCostPerWear(TEST_USER_ID)
 
@@ -75,10 +82,10 @@ describe('getCostPerWear', () => {
     ]
 
     mockSupabase.rpc.mockResolvedValue({ data: null, error: { message: 'Function not found' } })
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: mockItems,
       error: null,
-    })
+    }
 
     const result = await getCostPerWear(TEST_USER_ID)
 
@@ -96,10 +103,10 @@ describe('getCostPerWear', () => {
     ]
 
     mockSupabase.rpc.mockResolvedValue({ data: null, error: { message: 'Function not found' } })
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: mockItems,
       error: null,
-    })
+    }
 
     const result = await getCostPerWear(TEST_USER_ID)
 
@@ -131,10 +138,10 @@ describe('getCostPerWear', () => {
 
   it('returns empty array on error', async () => {
     mockSupabase.rpc.mockResolvedValue({ data: null, error: { message: 'Function not found' } })
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: null,
       error: { message: 'Query error' },
-    })
+    }
 
     const result = await getCostPerWear(TEST_USER_ID)
 
@@ -175,9 +182,14 @@ describe('getWardrobeDiversity', () => {
       { id: 'item-4' },
     ]
 
-    mockQueryBuilder.select
-      .mockResolvedValueOnce({ data: recentWears, error: null })
-      .mockResolvedValueOnce({ data: totalItems, error: null })
+    let callCount = 0
+    mockQueryBuilder.then = vi.fn(function(this: any, onResolve: any) {
+      callCount++
+      const result = callCount === 1 
+        ? { data: recentWears, error: null }
+        : { data: totalItems, error: null }
+      return Promise.resolve(result).then(onResolve)
+    })
 
     const result = await getWardrobeDiversity(TEST_USER_ID)
 
@@ -186,9 +198,11 @@ describe('getWardrobeDiversity', () => {
   })
 
   it('returns 0 when no items exist', async () => {
-    mockQueryBuilder.select
-      .mockResolvedValueOnce({ data: [], error: null })
-      .mockResolvedValueOnce({ data: [], error: null })
+    let callCount = 0
+    mockQueryBuilder.then = vi.fn(function(this: any, onResolve: any) {
+      callCount++
+      return Promise.resolve({ data: [], error: null }).then(onResolve)
+    })
 
     const result = await getWardrobeDiversity(TEST_USER_ID)
 
@@ -199,9 +213,14 @@ describe('getWardrobeDiversity', () => {
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    mockQueryBuilder.select
-      .mockResolvedValueOnce({ data: [], error: null })
-      .mockResolvedValueOnce({ data: [{ id: 'item-1' }], error: null })
+    let callCount = 0
+    mockQueryBuilder.then = vi.fn(function(this: any, onResolve: any) {
+      callCount++
+      const result = callCount === 1 
+        ? { data: [], error: null }
+        : { data: [{ id: 'item-1' }], error: null }
+      return Promise.resolve(result).then(onResolve)
+    })
 
     await getWardrobeDiversity(TEST_USER_ID)
 
@@ -212,10 +231,10 @@ describe('getWardrobeDiversity', () => {
   })
 
   it('handles errors gracefully', async () => {
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: null,
       error: { message: 'Query error' },
-    })
+    }
 
     const result = await getWardrobeDiversity(TEST_USER_ID)
 
@@ -231,9 +250,16 @@ describe('getMostWornVibe', () => {
     vi.clearAllMocks()
 
     mockQueryBuilder = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      gte: vi.fn().mockReturnThis(),
+      select: vi.fn(function(this: any) { return this; }),
+      eq: vi.fn(function(this: any) { return this; }),
+      gte: vi.fn(function(this: any) { return this; }),
+      then: vi.fn(function(this: any, onResolve: any) {
+        return Promise.resolve(this._mockResult || { data: null, error: null }).then(onResolve)
+      }),
+      catch: vi.fn(function(this: any, onReject: any) {
+        return Promise.resolve(this._mockResult || { data: null, error: null }).catch(onReject)
+      }),
+      _mockResult: { data: null, error: null },
     }
 
     mockSupabase = {
@@ -271,10 +297,10 @@ describe('getMostWornVibe', () => {
       },
     ]
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: wearEvents,
       error: null,
-    })
+    }
 
     const result = await getMostWornVibe(TEST_USER_ID)
 
@@ -311,10 +337,10 @@ describe('getMostWornVibe', () => {
       },
     ]
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: wearEvents,
       error: null,
-    })
+    }
 
     const result = await getMostWornVibe(TEST_USER_ID)
 
@@ -323,10 +349,10 @@ describe('getMostWornVibe', () => {
   })
 
   it('returns null when no wear events exist', async () => {
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: [],
       error: null,
-    })
+    }
 
     const result = await getMostWornVibe(TEST_USER_ID)
 
@@ -337,10 +363,10 @@ describe('getMostWornVibe', () => {
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: [],
       error: null,
-    })
+    }
 
     await getMostWornVibe(TEST_USER_ID)
 
@@ -360,10 +386,10 @@ describe('getMostWornVibe', () => {
       },
     ]
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: wearEvents,
       error: null,
-    })
+    }
 
     const result = await getMostWornVibe(TEST_USER_ID)
 
@@ -379,9 +405,16 @@ describe('getWardrobeStats', () => {
     vi.clearAllMocks()
 
     mockQueryBuilder = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      gte: vi.fn().mockReturnThis(),
+      select: vi.fn(function(this: any) { return this; }),
+      eq: vi.fn(function(this: any) { return this; }),
+      gte: vi.fn(function(this: any) { return this; }),
+      then: vi.fn(function(this: any, onResolve: any) {
+        return Promise.resolve(this._mockResult || { data: null, error: null }).then(onResolve)
+      }),
+      catch: vi.fn(function(this: any, onReject: any) {
+        return Promise.resolve(this._mockResult || { data: null, error: null }).catch(onReject)
+      }),
+      _mockResult: { data: null, error: null },
     }
 
     mockSupabase = {
@@ -404,11 +437,17 @@ describe('getWardrobeStats', () => {
     ]
 
     mockSupabase.rpc.mockResolvedValue({ data: null, error: { message: 'Function not found' } })
-    mockQueryBuilder.select
-      .mockResolvedValueOnce({ data: [{ id: 'item-1', price: 100, initial_wears: 1, wear_events: [{ id: 'wear-1' }, { id: 'wear-2' }] }], error: null })
-      .mockResolvedValueOnce({ data: [{ clothing_item_id: 'item-1' }], error: null })
-      .mockResolvedValueOnce({ data: [{ id: 'item-1' }], error: null })
-      .mockResolvedValueOnce({ data: [{ id: 'wear-1', clothing_items: { ai_metadata: { vibe_tags: ['casual'] } } }], error: null })
+    let callCount = 0
+    mockQueryBuilder.then = vi.fn(function(this: any, onResolve: any) {
+      callCount++
+      const results = [
+        { data: [{ id: 'item-1', price: 100, initial_wears: 1, wear_events: [{ id: 'wear-1' }, { id: 'wear-2' }] }], error: null },
+        { data: [{ clothing_item_id: 'item-1' }], error: null },
+        { data: [{ id: 'item-1' }], error: null },
+        { data: [{ id: 'wear-1', clothing_items: { ai_metadata: { vibe_tags: ['casual'] } } }], error: null },
+      ]
+      return Promise.resolve(results[callCount - 1] || { data: [], error: null }).then(onResolve)
+    })
 
     const result = await getWardrobeStats(TEST_USER_ID)
 
@@ -423,8 +462,7 @@ describe('getWardrobeStats', () => {
     const startTime = Date.now()
 
     mockSupabase.rpc.mockResolvedValue({ data: null, error: { message: 'Function not found' } })
-    mockQueryBuilder.select
-      .mockResolvedValue({ data: [], error: null })
+    mockQueryBuilder._mockResult = { data: [], error: null }
 
     await getWardrobeStats(TEST_USER_ID)
 

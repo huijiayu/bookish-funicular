@@ -25,22 +25,24 @@ describe('getStylistSuggestion', () => {
     mockQueryBuilder = {
       select: vi.fn(function(this: any) { return this; }),
       eq: vi.fn(function(this: any) { return this; }),
+      then: vi.fn(function(this: any, onResolve: any) {
+        return Promise.resolve(this._mockResult || { data: null, error: null }).then(onResolve)
+      }),
+      catch: vi.fn(function(this: any, onReject: any) {
+        return Promise.resolve(this._mockResult || { data: null, error: null }).catch(onReject)
+      }),
+      _mockResult: { data: null, error: null },
     }
 
     mockSupabase = {
       from: vi.fn(() => mockQueryBuilder),
     }
 
-    mockOpenAI = {
-      chat: {
-        completions: {
-          create: vi.fn(),
-        },
-      },
-    }
+    // Get the mock OpenAI instance that was created when the module loaded
+    const OpenAIInstance = new OpenAI({ apiKey: 'test' })
+    mockOpenAI = (OpenAIInstance as any)
 
     ;(createClient as any).mockResolvedValue(mockSupabase)
-    ;(OpenAI as any).mockImplementation(() => mockOpenAI)
   })
 
   it('fetches weather when location provided', async () => {
@@ -55,10 +57,10 @@ describe('getStylistSuggestion', () => {
       weather_appropriateness: 'Perfect for the weather',
     }
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: mockItems,
       error: null,
-    })
+    }
     vi.mocked(getCurrentWeather).mockResolvedValue(mockWeather)
     mockOpenAI.chat.completions.create.mockResolvedValue(
       createMockOpenAIResponse(JSON.stringify(mockSuggestion))
@@ -80,10 +82,10 @@ describe('getStylistSuggestion', () => {
       weather_appropriateness: 'Perfect for the weather',
     }
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: mockItems,
       error: null,
-    })
+    }
     vi.mocked(getCurrentWeather).mockRejectedValue(new Error('Weather API error'))
     mockOpenAI.chat.completions.create.mockResolvedValue(
       createMockOpenAIResponse(JSON.stringify(mockSuggestion))
@@ -115,10 +117,10 @@ describe('getStylistSuggestion', () => {
       weather_appropriateness: 'Perfect for the weather',
     }
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: mockItems,
       error: null,
-    })
+    }
     mockOpenAI.chat.completions.create.mockResolvedValue(
       createMockOpenAIResponse(JSON.stringify(mockSuggestion))
     )
@@ -142,10 +144,10 @@ describe('getStylistSuggestion', () => {
       weather_appropriateness: 'Perfect for the weather',
     }
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: mockItems,
       error: null,
-    })
+    }
     vi.mocked(getCurrentWeather).mockResolvedValue(mockWeather)
     mockOpenAI.chat.completions.create.mockResolvedValue(
       createMockOpenAIResponse(JSON.stringify(mockSuggestion))
@@ -170,10 +172,10 @@ describe('getStylistSuggestion', () => {
       weather_appropriateness: 'Perfect for the weather',
     }
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: mockItems,
       error: null,
-    })
+    }
     mockOpenAI.chat.completions.create.mockResolvedValue(
       createMockOpenAIResponse(JSON.stringify(mockSuggestion))
     )
@@ -209,10 +211,10 @@ describe('getStylistSuggestion', () => {
       weather_appropriateness: 'Perfect for the weather',
     }
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: mockItems,
       error: null,
-    })
+    }
     mockOpenAI.chat.completions.create.mockResolvedValue(
       createMockOpenAIResponse(JSON.stringify(mockSuggestion))
     )
@@ -226,10 +228,10 @@ describe('getStylistSuggestion', () => {
   it('throws error when no items in closet', async () => {
     const intent = 'casual day out'
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: [],
       error: null,
-    })
+    }
 
     await expect(getStylistSuggestion(TEST_USER_ID, intent)).rejects.toThrow(
       'No items in closet'
@@ -253,10 +255,10 @@ describe('getStylistSuggestion', () => {
       weather_appropriateness: 'Perfect for the weather',
     }
 
-    mockQueryBuilder.select.mockResolvedValue({
+    mockQueryBuilder._mockResult = {
       data: mockItems,
       error: null,
-    })
+    }
     mockOpenAI.chat.completions.create.mockResolvedValue(
       createMockOpenAIResponse(JSON.stringify(mockSuggestion))
     )

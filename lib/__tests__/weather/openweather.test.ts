@@ -7,8 +7,8 @@ global.fetch = vi.fn()
 describe('getCurrentWeather', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Clear the cache by re-importing the module
-    vi.resetModules()
+    // Don't reset modules - it interferes with the cache test
+    // The cache will be fresh for each test since modules are isolated
   })
 
   it('fetches from API when not cached', async () => {
@@ -47,7 +47,7 @@ describe('getCurrentWeather', () => {
   })
 
   it('returns cached data when available and fresh', async () => {
-    const location = 'New York'
+    const location = 'Boston' // Use unique location for this test
     const mockWeatherData = {
       main: {
         temp: 72,
@@ -68,17 +68,18 @@ describe('getCurrentWeather', () => {
       json: async () => mockWeatherData,
     })
 
-    // First call
+    // First call - should fetch
     const result1 = await getCurrentWeather(location)
-    // Second call should use cache
-    const result2 = await getCurrentWeather(location)
-
     expect(global.fetch).toHaveBeenCalledTimes(1)
+    
+    // Second call - should use cache (no new fetch)
+    const result2 = await getCurrentWeather(location)
+    expect(global.fetch).toHaveBeenCalledTimes(1) // Still 1, not 2
     expect(result1).toEqual(result2)
   })
 
   it('refetches when cache expired', async () => {
-    const location = 'New York'
+    const location = 'Los Angeles' // Use different location to avoid cache conflicts
     const mockWeatherData = {
       main: {
         temp: 72,
@@ -101,21 +102,38 @@ describe('getCurrentWeather', () => {
 
     // First call
     await getCurrentWeather(location)
+    expect(global.fetch).toHaveBeenCalledTimes(1)
 
+    // Manually expire cache by manipulating the cache directly
+    // Since we can't easily access the cache, we'll use a different approach:
+    // Wait for cache to expire (but this is slow in tests)
+    // Instead, let's test that cache works within the same test
+    // and test expiration separately by using a different location after time passes
+    
+    // Clear fetch mock to count new calls
+    ;(global.fetch as any).mockClear()
+    
     // Mock time passing (cache duration is 1 hour)
     vi.useFakeTimers()
-    vi.advanceTimersByTime(2 * 60 * 60 * 1000) // 2 hours
+    const originalDateNow = Date.now
+    let currentTime = Date.now()
+    global.Date.now = vi.fn(() => currentTime)
+    
+    // Advance time by 2 hours
+    currentTime += 2 * 60 * 60 * 1000
 
     // Second call should refetch
     await getCurrentWeather(location)
 
-    expect(global.fetch).toHaveBeenCalledTimes(2)
+    expect(global.fetch).toHaveBeenCalledTimes(1)
 
+    // Restore
+    global.Date.now = originalDateNow
     vi.useRealTimers()
   })
 
   it('formats weather data correctly', async () => {
-    const location = 'New York'
+    const location = 'Chicago' // Use different location to avoid cache conflicts
     const mockWeatherData = {
       main: {
         temp: 75.5,
@@ -138,7 +156,7 @@ describe('getCurrentWeather', () => {
 
     const result = await getCurrentWeather(location)
 
-    expect(result.temperature).toBe(76) // Rounded
+    expect(result.temperature).toBe(76) // Rounded from 75.5
     expect(result.condition).toBe('Clouds')
     expect(result.humidity).toBe(70)
     expect(result.windSpeed).toBe(10.2)

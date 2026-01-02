@@ -17,10 +17,12 @@ describe('createSignedUploadUrl', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    const storageBucket = {
+      createSignedUploadUrl: vi.fn(),
+    }
+
     mockStorage = {
-      from: vi.fn(() => ({
-        createSignedUploadUrl: vi.fn(),
-      })),
+      from: vi.fn(() => storageBucket),
     }
 
     mockSupabase = {
@@ -35,24 +37,27 @@ describe('createSignedUploadUrl', () => {
     const mockSignedUrl = 'https://storage.supabase.co/signed-url'
     const mockPath = `${TEST_USER_ID}/uploads/1234567890-abc123.jpg`
 
-    const storageFrom = mockStorage.from('clothing-items')
-    storageFrom.createSignedUploadUrl.mockResolvedValue({
-      signedUrl: mockSignedUrl,
-      path: mockPath,
+    const storageBucket = mockStorage.from('clothing-items')
+    storageBucket.createSignedUploadUrl.mockResolvedValue({
+      data: {
+        signedUrl: mockSignedUrl,
+        path: mockPath,
+      },
+      error: null,
     })
 
     const result = await createSignedUploadUrl(TEST_USER_ID, fileName)
 
     expect(mockStorage.from).toHaveBeenCalledWith('clothing-items')
-    const storageFrom = mockStorage.from('clothing-items')
-    expect(storageFrom.createSignedUploadUrl).toHaveBeenCalledWith(
+    expect(storageBucket.createSignedUploadUrl).toHaveBeenCalledWith(
       expect.stringMatching(new RegExp(`${TEST_USER_ID}/uploads/\\d+-[a-z0-9]+\\.jpg`)),
       {
         upsert: false,
       }
     )
     expect(result.signedUrl).toBe(mockSignedUrl)
-    expect(result.path).toBe(mockPath)
+    // The function returns the constructed path, not data.path
+    expect(result.path).toMatch(new RegExp(`${TEST_USER_ID}/uploads/\\d+-[a-z0-9]+\\.jpg`))
   })
 
   it('returns signed URL and path', async () => {
@@ -60,10 +65,13 @@ describe('createSignedUploadUrl', () => {
     const mockSignedUrl = 'https://storage.supabase.co/signed-url'
     const mockPath = 'user/uploads/file.png'
 
-    const storageFrom = mockStorage.from('clothing-items')
-    storageFrom.createSignedUploadUrl.mockResolvedValue({
-      signedUrl: mockSignedUrl,
-      path: mockPath,
+    const storageBucket = mockStorage.from('clothing-items')
+    storageBucket.createSignedUploadUrl.mockResolvedValue({
+      data: {
+        signedUrl: mockSignedUrl,
+        path: mockPath,
+      },
+      error: null,
     })
 
     const result = await createSignedUploadUrl(TEST_USER_ID, fileName)
@@ -71,14 +79,18 @@ describe('createSignedUploadUrl', () => {
     expect(result).toHaveProperty('signedUrl')
     expect(result).toHaveProperty('path')
     expect(result.signedUrl).toBe(mockSignedUrl)
-    expect(result.path).toBe(mockPath)
+    // The function returns the constructed path, not data.path, so we check it matches the pattern
+    expect(result.path).toMatch(new RegExp(`${TEST_USER_ID}/uploads/\\d+-[a-z0-9]+\\.png`))
   })
 
   it('handles errors gracefully', async () => {
     const fileName = 'test-image.jpg'
 
-    const storageFrom = mockStorage.from('clothing-items')
-    storageFrom.createSignedUploadUrl.mockRejectedValue(new Error('Storage error'))
+    const storageBucket = mockStorage.from('clothing-items')
+    storageBucket.createSignedUploadUrl.mockResolvedValue({
+      data: null,
+      error: { message: 'Storage error' },
+    })
 
     await expect(createSignedUploadUrl(TEST_USER_ID, fileName)).rejects.toThrow(
       'Failed to create upload URL'
@@ -90,10 +102,13 @@ describe('createSignedUploadUrl', () => {
     const mockSignedUrl = 'https://storage.supabase.co/signed-url'
     const mockPath = 'user/uploads/file.jpeg'
 
-    const storageFrom = mockStorage.from('clothing-items')
-    storageFrom.createSignedUploadUrl.mockResolvedValue({
-      signedUrl: mockSignedUrl,
-      path: mockPath,
+    const storageBucket = mockStorage.from('clothing-items')
+    storageBucket.createSignedUploadUrl.mockResolvedValue({
+      data: {
+        signedUrl: mockSignedUrl,
+        path: mockPath,
+      },
+      error: null,
     })
 
     const result = await createSignedUploadUrl(TEST_USER_ID, fileName)

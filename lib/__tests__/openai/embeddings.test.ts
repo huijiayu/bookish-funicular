@@ -16,17 +16,9 @@ describe('generateImageEmbedding', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockOpenAI = {
-      chat: {
-        completions: {
-          create: vi.fn(),
-        },
-      },
-      embeddings: {
-        create: vi.fn(),
-      },
-    }
-    ;(OpenAI as any).mockImplementation(() => mockOpenAI)
+    // Get the mock OpenAI instance that was created when the module loaded
+    const OpenAIInstance = new OpenAI({ apiKey: 'test' })
+    mockOpenAI = (OpenAIInstance as any)
 
     mockSharpInstance = {
       metadata: vi.fn(),

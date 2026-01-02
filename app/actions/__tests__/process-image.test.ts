@@ -30,7 +30,14 @@ describe('processClothingItems', () => {
       eq: vi.fn(function(this: any) { return this; }),
       not: vi.fn(function(this: any) { return this; }),
       limit: vi.fn(function(this: any) { return this; }),
-      single: vi.fn(),
+      single: vi.fn(function(this: any) { return this; }),
+      then: vi.fn(function(this: any, onResolve: any) {
+        return Promise.resolve(this._mockResult || { data: null, error: null }).then(onResolve)
+      }),
+      catch: vi.fn(function(this: any, onReject: any) {
+        return Promise.resolve(this._mockResult || { data: null, error: null }).catch(onReject)
+      }),
+      _mockResult: { data: null, error: null },
     }
 
     mockSupabase = {
@@ -53,12 +60,26 @@ describe('processClothingItems', () => {
     const mockMetadata = createMockClothingMetadata()
     const newItem = createMockClothingItem({ id: 'new-item-1' })
 
+    let callCount = 0
     vi.mocked(generatePerceptualHash).mockResolvedValue(mockHash)
-    mockQueryBuilder.single.mockResolvedValue({ data: null, error: null })
     vi.mocked(generateImageEmbedding).mockResolvedValue(mockEmbedding)
-    mockQueryBuilder.limit.mockResolvedValue({ data: [], error: null })
     vi.mocked(analyzeClothingImage).mockResolvedValue(mockMetadata)
-    mockQueryBuilder.single.mockResolvedValue({ data: newItem, error: null })
+    
+    // First call: check for exact match (returns null)
+    // Second call: check for similar items (limit query, returns [])
+    // Third call: insert new item (returns newItem)
+    mockQueryBuilder.then = vi.fn(function(this: any, onResolve: any) {
+      callCount++
+      let result
+      if (callCount === 1) {
+        result = { data: null, error: null } // No exact match
+      } else if (callCount === 2) {
+        result = { data: [], error: null } // No similar items
+      } else {
+        result = { data: newItem, error: null } // Insert result
+      }
+      return Promise.resolve(result).then(onResolve)
+    })
 
     const result = await processClothingItems(TEST_USER_ID, items)
 
@@ -118,25 +139,39 @@ describe('processClothingItems', () => {
     const mockMetadata = createMockClothingMetadata()
     const newItem = createMockClothingItem({ id: 'new-item-1' })
 
+    let callCount = 0
     // First item fails, second succeeds
     vi.mocked(generatePerceptualHash)
       .mockResolvedValueOnce(mockHash)
       .mockResolvedValueOnce(mockHash)
-    mockQueryBuilder.single
-      .mockResolvedValueOnce({ data: null, error: null })
-      .mockResolvedValueOnce({ data: null, error: null })
     vi.mocked(generateImageEmbedding)
       .mockRejectedValueOnce(new Error('Embedding error'))
       .mockResolvedValueOnce(mockEmbedding)
-    mockQueryBuilder.limit
-      .mockResolvedValueOnce({ data: [], error: null })
-      .mockResolvedValueOnce({ data: [], error: null })
     vi.mocked(analyzeClothingImage)
       .mockResolvedValueOnce(mockMetadata)
       .mockResolvedValueOnce(mockMetadata)
-    mockQueryBuilder.single
-      .mockResolvedValueOnce({ data: null, error: null })
-      .mockResolvedValueOnce({ data: newItem, error: null })
+    
+    // Query sequence: 
+    // First item: exact match (null) - then embedding fails, so no more queries
+    // Second item: exact match (null), similar ([]), insert (newItem)
+    mockQueryBuilder.then = vi.fn(function(this: any, onResolve: any) {
+      callCount++
+      let result
+      if (callCount === 1) {
+        // First item exact match
+        result = { data: null, error: null }
+      } else if (callCount === 2) {
+        // Second item exact match
+        result = { data: null, error: null }
+      } else if (callCount === 3) {
+        // Second item similar check
+        result = { data: [], error: null }
+      } else {
+        // Second item insert - succeeds
+        result = { data: newItem, error: null }
+      }
+      return Promise.resolve(result).then(onResolve)
+    })
 
     const result = await processClothingItems(TEST_USER_ID, items)
 
