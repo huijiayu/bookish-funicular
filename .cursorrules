@@ -1,0 +1,29 @@
+# Loom & Logic: AI Wardrobe Rules
+
+## Tech Stack & Patterns
+- Use **Next.js 15 (App Router)** with TypeScript.
+- Use **Tailwind CSS** and **Shadcn UI** for all components.
+- Use **Supabase** for database (PostgreSQL) and Auth.
+- Prioritize **Server Components** for data fetching and **Client Components** only for interactivity (forms, buttons).
+- Use **Lucide React** for consistent iconography.
+
+## Domain-Specific Logic
+- **Cost Per Wear (CPW)**: Always calculate this as `price / (initial_wears + count(wear_events))`. Handle the "division by zero" case gracefully (display price).
+- **Vision Processing**: Use the `gpt-4o-mini` model for auto-tagging. Always request "Structured Outputs" (JSON) to ensure database compatibility.
+- **Wear Events**: Every "wear" must be logged in the `wear_events` table. Provide a `wear_event_id` to allow users to delete accidental logs.
+
+## Coding Standards
+- Maintain strict TypeScript types; avoid `any`.
+- Use functional components with arrow functions.
+- Keep components small and modular. Store reusable UI in `/components/ui`.
+- Follow a clean, minimalist "Pinterest-meets-Apple" design aesthetic.
+
+## Error Handling
+- Wrap API calls in try/catch blocks with user-friendly error messages (Toasts).
+- Show loading skeletons (Shadcn Skeleton) while images or AI suggestions are generating.
+
+## Multimodal & Storage Rules
+- **Image Uploads**: Use the `createSignedUploadUrl` pattern from Supabase. Never send raw base64 images to the database; upload to Storage first, then save the URL in the DB.
+- **Vision Schema**: When calling `gpt-4o-mini`, use `response_format: { type: "json_schema", ... }`.
+- **Deduplication**: Before running AI analysis, check if a similar image exists by comparing perceptual hashes (use `sharp` or a dedicated hashing lib).
+- **Optimization**: Use `next/image` for all closet views. Request 'low' detail from OpenAI's Vision API to save on token costs unless higher precision is needed for fabric patterns.
