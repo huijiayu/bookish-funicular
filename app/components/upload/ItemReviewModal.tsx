@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { toast } from '@/components/ui/toast'
+import { toast } from 'sonner'
 import { processClothingItems, type ProcessItemInput } from '@/app/actions/process-image'
 import type { DetectedItem } from '@/lib/openai/multi-item-detection'
 import { X, Check } from 'lucide-react'

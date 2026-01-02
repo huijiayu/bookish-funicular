@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { toast } from '@/components/ui/toast'
+import { toast } from 'sonner'
 import { createSignedUploadUrl, detectClothingItemsAction } from '@/app/actions/upload'
 import { ItemReviewModal } from './ItemReviewModal'
 import { createClient } from '@/lib/supabase/client'
@@ -88,6 +88,10 @@ export function ImageUploader({ userId }: ImageUploaderProps) {
     }
   }
 
+  const handleButtonClick = () => {
+    fileInputRef.current?.click()
+  }
+
   return (
     <>
       <div className="space-y-4">
@@ -99,28 +103,25 @@ export function ImageUploader({ userId }: ImageUploaderProps) {
           className="hidden"
           id="image-upload"
         />
-        <label htmlFor="image-upload">
-          <Button
-            variant="outline"
-            className="w-full"
-            disabled={uploading || detecting}
-            asChild
-          >
-            <span>
-              {uploading || detecting ? (
-                <>
-                  <Upload className="mr-2 h-4 w-4 animate-pulse" />
-                  {uploading ? 'Uploading...' : 'Detecting items...'}
-                </>
-              ) : (
-                <>
-                  <ImageIcon className="mr-2 h-4 w-4" />
-                  Upload Clothing Image
-                </>
-              )}
-            </span>
-          </Button>
-        </label>
+        <Button
+          variant="outline"
+          className="w-full"
+          disabled={uploading || detecting}
+          onClick={handleButtonClick}
+          type="button"
+        >
+          {uploading || detecting ? (
+            <>
+              <Upload className="mr-2 h-4 w-4 animate-pulse" />
+              {uploading ? 'Uploading...' : 'Detecting items...'}
+            </>
+          ) : (
+            <>
+              <ImageIcon className="mr-2 h-4 w-4" />
+              Upload Clothing Image
+            </>
+          )}
+        </Button>
 
         {(uploading || detecting) && (
           <div className="space-y-2">
