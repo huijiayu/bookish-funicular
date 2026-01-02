@@ -69,3 +69,4 @@ export const createBrowserClient = vi.fn(() => createMockSupabaseClient())
 // Mock Supabase JS createClient
 export const createSupabaseClient = vi.fn(() => createMockSupabaseClient())
 
+

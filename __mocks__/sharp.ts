@@ -19,3 +19,4 @@ mockSharp.metadata = vi.fn()
 
 export default mockSharp
 
+
