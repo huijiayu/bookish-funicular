@@ -107,4 +107,3 @@ export async function generateImageEmbedding(
     throw new Error('Failed to generate image embedding')
   }
 }
-

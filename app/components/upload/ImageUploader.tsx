@@ -46,7 +46,8 @@ export function ImageUploader({ userId }: ImageUploaderProps) {
       })
 
       if (!response.ok) {
-        throw new Error('Upload failed')
+        const errorText = await response.text().catch(() => 'Unknown error')
+        throw new Error(`Upload to Supabase Storage failed: ${response.status} ${response.statusText}. ${errorText}`)
       }
 
       // Step 3: Get public URL
@@ -75,19 +76,50 @@ export function ImageUploader({ userId }: ImageUploaderProps) {
       console.error('Error uploading image:', error)
       
       // Provide more specific error messages
+      // Check most specific errors first, then general ones
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       
-      if (errorMessage.includes('does not exist') || errorMessage.includes('Storage bucket')) {
+      if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
+        toast.error('OpenAI API rate limit exceeded. Please wait a moment and try again.', {
+          duration: 5000,
+        })
+      } else if (errorMessage.includes('does not exist') || errorMessage.includes('Storage bucket')) {
         toast.error(
           'Storage bucket not configured. Please ensure the database migrations have been run.',
           { duration: 5000 }
         )
-      } else if (errorMessage.includes('Failed to create signed URL')) {
+      } else if (errorMessage.includes('Failed to create signed URL') || errorMessage.includes('createSignedUploadUrl')) {
         toast.error('Failed to create upload URL. Please check your Supabase configuration.', {
           duration: 5000,
         })
+      } else if (errorMessage.includes('Upload to Supabase Storage failed')) {
+        toast.error('Failed to upload image to storage. Please check your Supabase configuration.', {
+          duration: 5000,
+        })
+      } else if (errorMessage.includes('OPENAI_API_KEY') || (errorMessage.includes('OpenAI API') && errorMessage.includes('authentication'))) {
+        toast.error('OpenAI API configuration error. Please check your .env.local file.', {
+          duration: 5000,
+        })
+      } else if (errorMessage.includes('Failed to detect clothing items')) {
+        // Extract the actual error reason from the message
+        const match = errorMessage.match(/Failed to detect clothing items: (.+)/)
+        if (match && match[1]) {
+          toast.error(`Failed to detect clothing items: ${match[1]}`, {
+            duration: 5000,
+          })
+        } else {
+          toast.error('Failed to detect clothing items in the image. Please try a different image.', {
+            duration: 5000,
+          })
+        }
+      } else if (errorMessage.includes('OpenAI API')) {
+        toast.error(`OpenAI API error: ${errorMessage}`, {
+          duration: 5000,
+        })
       } else {
-        toast.error('Failed to upload image. Please try again.')
+        toast.error(`Failed to upload image: ${errorMessage}`, {
+          duration: 5000,
+        })
       }
     } finally {
       setUploading(false)

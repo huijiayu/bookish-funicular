@@ -127,7 +127,8 @@ export async function processClothingItems(
 
       if (error) {
         console.error('Error creating clothing item:', error)
-        throw new Error('Failed to create clothing item')
+        const errorDetails = error.message || 'Unknown database error'
+        throw new Error(`Failed to create clothing item: ${errorDetails}`)
       }
 
       results.push({
@@ -136,6 +137,8 @@ export async function processClothingItems(
       })
     } catch (error) {
       console.error('Error processing item:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error(`Failed to process item "${item.description}": ${errorMessage}`)
       // Continue with next item even if one fails
       results.push({
         id: '',

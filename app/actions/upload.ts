@@ -78,12 +78,30 @@ export async function detectClothingItemsAction(
   userId: string,
   imageUrl: string
 ): Promise<DetectedItem[]> {
+  // Validate inputs
+  if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+    throw new Error('Invalid userId: userId is required and must be a non-empty string')
+  }
+
+  if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
+    throw new Error('Invalid imageUrl: imageUrl is required and must be a non-empty string')
+  }
+
   try {
     const items = await detectClothingItems(imageUrl)
     return items
   } catch (error) {
     console.error('Error detecting clothing items:', error)
-    throw new Error('Failed to detect clothing items')
+    // Wrap error to ensure consistent error message format
+    if (error instanceof Error) {
+      // If the error already includes our standard message, re-throw as-is
+      if (error.message.includes('Failed to detect clothing items')) {
+        throw error
+      }
+      // Otherwise, wrap it with our standard message while preserving details
+      throw new Error(`Failed to detect clothing items: ${error.message}`)
+    }
+    throw new Error(`Failed to detect clothing items: ${error instanceof Error ? error.message : 'Unknown error occurred'}`)
   }
 }
 

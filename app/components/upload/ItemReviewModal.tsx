@@ -78,7 +78,25 @@ export function ItemReviewModal({
       onOpenChange(false)
     } catch (error) {
       console.error('Error processing items:', error)
-      toast.error('Failed to process items. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      
+      if (errorMessage.includes('Supabase') || errorMessage.includes('database')) {
+        toast.error('Database error. Please check your Supabase configuration.', {
+          duration: 5000,
+        })
+      } else if (errorMessage.includes('OpenAI') || errorMessage.includes('API')) {
+        toast.error('AI processing error. Please check your OpenAI API configuration.', {
+          duration: 5000,
+        })
+      } else if (errorMessage.includes('perceptual hash') || errorMessage.includes('image')) {
+        toast.error('Image processing error. Please try a different image.', {
+          duration: 5000,
+        })
+      } else {
+        toast.error(`Failed to process items: ${errorMessage}`, {
+          duration: 5000,
+        })
+      }
     } finally {
       setProcessing(false)
     }

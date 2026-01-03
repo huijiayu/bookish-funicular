@@ -104,4 +104,3 @@ export async function analyzeClothingImage(
     throw new Error('Failed to analyze clothing image')
   }
 }
-
