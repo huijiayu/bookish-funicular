@@ -1,6 +1,6 @@
 # Loom & Logic
 
-AI-powered wardrobe management system built with Next.js 15, Supabase, and OpenAI.
+AI-powered wardrobe management system built with Next.js 15, Supabase, and Google Gemini.
 
 ## Features
 
@@ -15,7 +15,7 @@ AI-powered wardrobe management system built with Next.js 15, Supabase, and OpenA
 
 - **Next.js 15** (App Router) with TypeScript
 - **Supabase** (PostgreSQL + Storage + Auth)
-- **OpenAI** (GPT-4o-mini Vision API)
+- **Google Gemini** (Gemini 1.5 Flash - Free Tier)
 - **Tailwind CSS** + **Shadcn UI**
 - **pgvector** (for semantic similarity search)
 
@@ -31,9 +31,16 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-OPENAI_API_KEY=your_openai_api_key
+GEMINI_API_KEY=your_gemini_api_key  # Get free API key at https://aistudio.google.com/app/apikey
 OPENWEATHER_API_KEY=your_openweather_api_key
 ```
+
+**Getting a Gemini API Key (Free):**
+1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Sign in with your Google account
+3. Click "Create API Key"
+4. Copy the key and add it to `.env.local` as `GEMINI_API_KEY`
+5. The free tier includes 60 requests per minute - perfect for development!
 
 3. Run database migrations:
 
@@ -77,14 +84,14 @@ npm run dev
 - `app/` - Next.js App Router pages and components
 - `app/actions/` - Server actions for upload, processing, stats, and stylist
 - `app/components/` - React components (upload, dashboard, stylist)
-- `lib/` - Utility functions (Supabase client, OpenAI integration, etc.)
+- `lib/` - Utility functions (Supabase client, Gemini integration, etc.)
 - `supabase/migrations/` - Database migrations
 - `components/ui/` - Reusable UI components (Shadcn)
 
 ## Key Features Implementation
 
 ### Multi-Item Detection
-Uses GPT-4o-mini Vision API to detect and segment multiple clothing items in a single image before processing.
+Uses Google Gemini 1.5 Flash (free tier) to detect and segment multiple clothing items in a single image before processing.
 
 ### Hybrid Deduplication
 1. **Perceptual Hash**: Exact duplicate detection (same image file)

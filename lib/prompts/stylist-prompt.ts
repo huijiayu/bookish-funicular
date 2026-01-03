@@ -1,4 +1,4 @@
-import type { ClothingMetadata } from '@/lib/openai/vision'
+import type { ClothingMetadata } from '@/lib/gemini/vision'
 
 export interface ClosetItem {
   id: string

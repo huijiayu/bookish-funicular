@@ -1,7 +1,7 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/server'
-import { detectClothingItems, type DetectedItem } from '@/lib/openai/multi-item-detection'
+import { detectClothingItems, type DetectedItem } from '@/lib/gemini/multi-item-detection'
 
 export interface SignedUploadUrlResponse {
   signedUrl: string

@@ -8,7 +8,7 @@ import { createSignedUploadUrl, detectClothingItemsAction } from '@/app/actions/
 import { ItemReviewModal } from './ItemReviewModal'
 import { createClient } from '@/lib/supabase/client'
 import { Upload, Image as ImageIcon } from 'lucide-react'
-import type { DetectedItem } from '@/lib/openai/multi-item-detection'
+import type { DetectedItem } from '@/lib/gemini/multi-item-detection'
 
 interface ImageUploaderProps {
   userId: string
@@ -23,9 +23,14 @@ export function ImageUploader({ userId }: ImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleFileSelect called', event.target.files)
     const file = event.target.files?.[0]
-    if (!file) return
+    if (!file) {
+      console.log('No file selected')
+      return
+    }
 
+    console.log('File selected:', file.name, file.type, file.size)
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file')
       return
@@ -80,7 +85,7 @@ export function ImageUploader({ userId }: ImageUploaderProps) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       
       if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
-        toast.error('OpenAI API rate limit exceeded. Please wait a moment and try again.', {
+        toast.error('Gemini API rate limit exceeded. Please wait a moment and try again.', {
           duration: 5000,
         })
       } else if (errorMessage.includes('does not exist') || errorMessage.includes('Storage bucket')) {
@@ -96,8 +101,8 @@ export function ImageUploader({ userId }: ImageUploaderProps) {
         toast.error('Failed to upload image to storage. Please check your Supabase configuration.', {
           duration: 5000,
         })
-      } else if (errorMessage.includes('OPENAI_API_KEY') || (errorMessage.includes('OpenAI API') && errorMessage.includes('authentication'))) {
-        toast.error('OpenAI API configuration error. Please check your .env.local file.', {
+      } else if (errorMessage.includes('GEMINI_API_KEY') || (errorMessage.includes('Gemini API') && errorMessage.includes('authentication'))) {
+        toast.error('Gemini API configuration error. Please check your .env.local file.', {
           duration: 5000,
         })
       } else if (errorMessage.includes('Failed to detect clothing items')) {
@@ -112,8 +117,8 @@ export function ImageUploader({ userId }: ImageUploaderProps) {
             duration: 5000,
           })
         }
-      } else if (errorMessage.includes('OpenAI API')) {
-        toast.error(`OpenAI API error: ${errorMessage}`, {
+      } else if (errorMessage.includes('Gemini API')) {
+        toast.error(`Gemini API error: ${errorMessage}`, {
           duration: 5000,
         })
       } else {

@@ -1,6 +1,6 @@
 'use server'
 
-import OpenAI from 'openai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentWeather } from '@/lib/weather/openweather'
 import {
@@ -12,9 +12,7 @@ import {
   type ClosetItem,
 } from '@/lib/prompts/stylist-prompt'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 /**
  * Gets stylist suggestion based on user intent, weather, and closet data
@@ -104,36 +102,35 @@ export async function getStylistSuggestion(
   const systemPrompt = getStylistSystemPrompt()
   const userPrompt = buildStylistPrompt(input)
 
-  // Step 5: Call OpenAI
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: systemPrompt,
-      },
-      {
-        role: 'user',
-        content: userPrompt,
-      },
-    ],
-    response_format: {
-      type: 'json_schema',
-      json_schema: {
-        name: 'stylist_suggestion',
-        strict: true,
-        schema: stylistResponseSchema,
-      },
-    },
-    max_tokens: 500,
-  })
+  // Step 5: Call Gemini
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
-  const content = response.choices[0]?.message?.content
-  if (!content) {
-    throw new Error('No response from OpenAI')
+  const fullPrompt = `${systemPrompt}\n\n${userPrompt}\n\nReturn your response as a valid JSON object with this exact structure:
+{
+  "outfit_items": ["item_id_1", "item_id_2"],
+  "reasoning": "explanation",
+  "color_palette": "color scheme description",
+  "weather_appropriateness": "weather match description"
+}`
+
+  const result = await model.generateContent(fullPrompt)
+  const response = await result.response
+  const text = response.text()
+
+  // Parse JSON from response (Gemini may wrap it in markdown code blocks)
+  let jsonText = text.trim()
+  // Remove markdown code blocks if present
+  if (jsonText.startsWith('```json')) {
+    jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+  } else if (jsonText.startsWith('```')) {
+    jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '')
   }
 
-  const suggestion = JSON.parse(content) as StylistResponse
+  if (!jsonText) {
+    throw new Error('No response from Gemini')
+  }
+
+  const suggestion = JSON.parse(jsonText) as StylistResponse
 
   // Step 6: Get full item details for the suggested outfit
   const suggestedItems = closetItems.filter((item) =>
@@ -145,4 +142,3 @@ export async function getStylistSuggestion(
     items: suggestedItems,
   }
 }
-

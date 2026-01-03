@@ -2,9 +2,8 @@
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { generatePerceptualHash } from '@/lib/utils/perceptual-hash'
-import { generateImageEmbedding } from '@/lib/openai/embeddings'
-import { analyzeClothingImage, type ClothingMetadata } from '@/lib/openai/vision'
-import type { DetectedItem } from '@/lib/openai/multi-item-detection'
+import { analyzeClothingImage, type ClothingMetadata } from '@/lib/gemini/vision'
+import type { DetectedItem } from '@/lib/gemini/multi-item-detection'
 
 export interface ProcessedItem {
   id: string
@@ -69,14 +68,9 @@ export async function processClothingItems(
         continue
       }
 
-      // Step 3: Generate vision embedding for semantic similarity
-      // Use bounding box to ensure embeddings are item-specific
-      const embedding = await generateImageEmbedding(
-        item.imageUrl,
-        item.boundingBox
-      )
-
-      // Step 4: Check for similar items using cosine similarity
+      // Step 3: Check for similar items using cosine similarity
+      // TODO: Implement vision embeddings with Gemini for semantic similarity
+      // For now, we skip this check and rely only on exact perceptual hash matches.
       // TODO: Implement pgvector cosine similarity check for semantic duplicate detection
       // This requires:
       // 1. Storing vision_embedding in the database (currently generated but not stored)

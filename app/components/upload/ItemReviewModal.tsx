@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { processClothingItems, type ProcessItemInput } from '@/app/actions/process-image'
-import type { DetectedItem } from '@/lib/openai/multi-item-detection'
+import type { DetectedItem } from '@/lib/gemini/multi-item-detection'
 import { X, Check } from 'lucide-react'
 
 interface ItemReviewModalProps {
@@ -84,8 +84,8 @@ export function ItemReviewModal({
         toast.error('Database error. Please check your Supabase configuration.', {
           duration: 5000,
         })
-      } else if (errorMessage.includes('OpenAI') || errorMessage.includes('API')) {
-        toast.error('AI processing error. Please check your OpenAI API configuration.', {
+      } else if (errorMessage.includes('Gemini') || errorMessage.includes('API')) {
+        toast.error('AI processing error. Please check your Gemini API configuration.', {
           duration: 5000,
         })
       } else if (errorMessage.includes('perceptual hash') || errorMessage.includes('image')) {
