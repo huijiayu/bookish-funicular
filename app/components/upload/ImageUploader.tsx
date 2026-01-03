@@ -73,7 +73,22 @@ export function ImageUploader({ userId }: ImageUploaderProps) {
       setReviewModalOpen(true)
     } catch (error) {
       console.error('Error uploading image:', error)
-      toast.error('Failed to upload image. Please try again.')
+      
+      // Provide more specific error messages
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      
+      if (errorMessage.includes('does not exist') || errorMessage.includes('Storage bucket')) {
+        toast.error(
+          'Storage bucket not configured. Please ensure the database migrations have been run.',
+          { duration: 5000 }
+        )
+      } else if (errorMessage.includes('Failed to create signed URL')) {
+        toast.error('Failed to create upload URL. Please check your Supabase configuration.', {
+          duration: 5000,
+        })
+      } else {
+        toast.error('Failed to upload image. Please try again.')
+      }
     } finally {
       setUploading(false)
       setDetecting(false)
