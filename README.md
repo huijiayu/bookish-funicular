@@ -36,10 +36,36 @@ OPENWEATHER_API_KEY=your_openweather_api_key
 ```
 
 3. Run database migrations:
-```bash
-# Apply migrations to your Supabase project
-# Use Supabase CLI or apply via Supabase dashboard
-```
+
+   **Option A: Using Supabase CLI (Recommended)**
+   
+   Link your project (if not already linked):
+   ```bash
+   supabase link --project-ref <your-project-ref>
+   ```
+   
+   Then apply migrations:
+   ```bash
+   supabase db push
+   ```
+   
+   Or use the provided script:
+   ```bash
+   ./scripts/apply-migrations.sh
+   ```
+
+   **Option B: Using Supabase Dashboard**
+   
+   1. Go to your Supabase project dashboard
+   2. Navigate to SQL Editor
+   3. Copy and paste the contents of `supabase/migrations/000_combined_migration.sql`
+   4. Click "Run" to execute
+
+   **Option C: Local Development (requires Docker)**
+   ```bash
+   supabase start
+   supabase db reset
+   ```
 
 4. Run the development server:
 ```bash
